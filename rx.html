@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RXJS</title>
+    <script src="/Scripts/jquery-3.2.1.min.js"></script>
+    <script src="https://unpkg.com/@reactivex/rxjs@6.0.0/dist/global/rxjs.umd.js"></script>
+</head>
+
+<body>
+    <h1>HTML JS</h1>
+    <input id="send">
+    <hr />
+    <h1>RXJS</h1>   
+    <input class="auto-complete">
+    <hr />
+    <div class='auto-complete__list'></div>
+</body>
+
+</html>
+
+<script>
+    $(document).ready(function () {
+        var timer = null;
+        var delayTime = 500;               // keyup 觸發延遲時間
+        // keyup event change event
+        $('#send').on('keyup', function () {
+            var xValue = $(this).val();
+            if (timer) {
+                clearTimeout(timer);
+            }
+            timer = setTimeout(function () {
+                searchWikipedia(xValue).then(function (data) {
+                    console.log(data);
+                    // 查詢結果在第二個array
+                    renderList(data[1]);
+                });
+            }, delayTime);
+
+        });
+
+        $('#send').on('change', function () {
+            //console.log('.on(change) = ' + $(this).val());
+            //var xValue = $(this).val();
+        });
+
+        function searchWikipedia(term) {
+            console.log('searchWikipedia = ' + term);
+            return $.ajax({
+                url: 'http://en.wikipedia.org/w/api.php',
+                dataType: 'jsonp',
+                data: {
+                    action: 'opensearch',
+                    format: 'json',
+                    search: term
+                }
+            }).promise();
+        }
+
+        function renderList(list) {
+            $('.auto-complete__list').empty();
+            $('.auto-complete__list').append(list.map(function (item) { return '<li>' + item + '</li>' }));
+        }
+
+        //let map = rxjs.operators.map;
+        //let flatMap = rxjs.operators.flatMap;
+        const { map, filter, flatMap, debounceTime, tap } = rxjs.operators;
+        rxjs
+            .fromEvent(document.querySelector('.auto-complete'), 'keyup')
+            .pipe(
+                debounceTime(delayTime),
+                map((e) => (e.target.value)),
+                flatMap((value) => {
+                    let x = rxjs.from(searchWikipedia(value));
+                    return x;
+                }),
+                tap(res => console.log(res)),
+                map((res) => (res[1])),
+            )
+            .subscribe((value) => {
+                renderList(value);
+            });
+
+    });
+
+
+</script>
