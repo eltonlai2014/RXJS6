@@ -4,12 +4,14 @@ module.exports = {
         index: './src/index.ts',
     },
     mode:'development',
+    target: 'node', // in order to ignore built-in modules like path, fs, etc. 
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
-                exclude: /node_modules/,
+                loader: 'ts-loader',
+                // exclude:path.resolve(__dirname, "node_modules")
+								exclude: "/node_modules/"
             },
         ],
     },
@@ -17,15 +19,19 @@ module.exports = {
         extensions: ['.ts', '.js'],
     },
     output: {
-        filename: '[name].js',
+        filename: 'bundle.js',
         path: __dirname + '/dist',
         //library: '[name]',
         //libraryTarget: 'amd',
+				environment: {
+					arrowFunction: false,
+				}	
+				
     },
     externals: {
         jquery: 'jQuery'
     },
-    devtool: 'eval-source-map',
+    devtool: false,
     /*
     plugins: [
         new webpack.LoaderOptionsPlugin({
